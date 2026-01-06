@@ -7,6 +7,7 @@ import win32api
 
 # ================= FILE =================
 PROFILE_FILE = "profiles.json"
+TRANSPARENT_COLOR = "#010203"  # ultra-rare transparent key
 
 # ================= DEFAULT SETTINGS =================
 DEFAULTS = {
@@ -30,19 +31,18 @@ def load_settings():
         return DEFAULTS.copy()
 
 def save_settings():
-    data = {
-        "size": size.get(),
-        "thickness": thickness.get(),
-        "gap": gap.get(),
-        "r": r.get(),
-        "g": g.get(),
-        "b": b.get(),
-        "mode": mode.get(),
-        "recoil_strength": recoil_strength.get(),
-        "recoil_enabled": recoil_enabled
-    }
     with open(PROFILE_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump({
+            "size": size.get(),
+            "thickness": thickness.get(),
+            "gap": gap.get(),
+            "r": r.get(),
+            "g": g.get(),
+            "b": b.get(),
+            "mode": mode.get(),
+            "recoil_strength": recoil_strength.get(),
+            "recoil_enabled": recoil_enabled
+        }, f, indent=4)
 
 settings = load_settings()
 
@@ -54,24 +54,28 @@ recoil_offset = 0
 overlay = tk.Tk()
 overlay.overrideredirect(True)
 overlay.attributes("-topmost", True)
-overlay.attributes("-transparentcolor", "black")
+overlay.attributes("-transparentcolor", TRANSPARENT_COLOR)
 
 sw = overlay.winfo_screenwidth()
 sh = overlay.winfo_screenheight()
 overlay.geometry(f"{sw}x{sh}+0+0")
 
-canvas = tk.Canvas(overlay, bg="black", highlightthickness=0)
+canvas = tk.Canvas(
+    overlay,
+    bg=TRANSPARENT_COLOR,
+    highlightthickness=0
+)
 canvas.pack(fill="both", expand=True)
 
 # ================= VARIABLES =================
-size = tk.IntVar(value=settings.get("size", DEFAULTS["size"]))
-thickness = tk.IntVar(value=settings.get("thickness", DEFAULTS["thickness"]))
-gap = tk.IntVar(value=settings.get("gap", DEFAULTS["gap"]))
-r = tk.IntVar(value=settings.get("r", DEFAULTS["r"]))
-g = tk.IntVar(value=settings.get("g", DEFAULTS["g"]))
-b = tk.IntVar(value=settings.get("b", DEFAULTS["b"]))
-mode = tk.StringVar(value=settings.get("mode", DEFAULTS["mode"]))
-recoil_strength = tk.IntVar(value=settings.get("recoil_strength", DEFAULTS["recoil_strength"]))
+size = tk.IntVar(value=settings["size"])
+thickness = tk.IntVar(value=settings["thickness"])
+gap = tk.IntVar(value=settings["gap"])
+r = tk.IntVar(value=settings["r"])
+g = tk.IntVar(value=settings["g"])
+b = tk.IntVar(value=settings["b"])
+mode = tk.StringVar(value=settings["mode"])
+recoil_strength = tk.IntVar(value=settings["recoil_strength"])
 
 # ================= DRAW =================
 def draw():
@@ -79,21 +83,78 @@ def draw():
 
     cx = sw // 2
     cy = (sh // 2) + recoil_offset
-    color = f"#{r.get():02x}{g.get():02x}{b.get():02x}"
 
-    s = size.get()
-    t = thickness.get()
-    gapp = gap.get()
+    rr, gg, bb = r.get(), g.get(), b.get()
+
+    # safety: avoid transparent color collision
+    if rr == 1 and gg == 2 and bb == 3:
+        rr = 2
+
+    color = f"#{rr:02x}{gg:02x}{bb:02x}"
+
+    arm = size.get()
+    gap_ = gap.get()
+    thick = thickness.get()
+    half = thick // 2
+    rem = thick - half
 
     if mode.get() == "cross":
-        canvas.create_rectangle(cx-gapp-s, cy-t//2, cx-gapp, cy+t//2, fill=color, outline="")
-        canvas.create_rectangle(cx+gapp, cy-t//2, cx+gapp+s, cy+t//2, fill=color, outline="")
-        canvas.create_rectangle(cx-t//2, cy-gapp-s, cx+t//2, cy-gapp, fill=color, outline="")
-        canvas.create_rectangle(cx-t//2, cy+gapp, cx+t//2, cy+gapp+s, fill=color, outline="")
+        # LEFT
+        canvas.create_rectangle(
+            cx - gap_ - arm,
+            cy - half,
+            cx - gap_,
+            cy + rem,
+            fill=color,
+            outline=""
+        )
+
+        # RIGHT
+        canvas.create_rectangle(
+            cx + gap_,
+            cy - half,
+            cx + gap_ + arm,
+            cy + rem,
+            fill=color,
+            outline=""
+        )
+
+        # TOP
+        canvas.create_rectangle(
+            cx - half,
+            cy - gap_ - arm,
+            cx + rem,
+            cy - gap_,
+            fill=color,
+            outline=""
+        )
+
+        # BOTTOM
+        canvas.create_rectangle(
+            cx - half,
+            cy + gap_,
+            cx + rem,
+            cy + gap_ + arm,
+            fill=color,
+            outline=""
+        )
+
     elif mode.get() == "dot":
-        canvas.create_oval(cx-3, cy-3, cx+3, cy+3, fill=color, outline="")
+        d = max(2, thick)
+        canvas.create_oval(
+            cx - d, cy - d,
+            cx + d, cy + d,
+            fill=color,
+            outline=""
+        )
+
     elif mode.get() == "circle":
-        canvas.create_oval(cx-s, cy-s, cx+s, cy+s, outline=color, width=t)
+        canvas.create_oval(
+            cx - arm, cy - arm,
+            cx + arm, cy + arm,
+            outline=color,
+            width=thick
+        )
 
     overlay.after(16, draw)
 
@@ -112,14 +173,14 @@ threading.Thread(target=recoil_loop, daemon=True).start()
 # ================= UI =================
 ui = tk.Toplevel()
 ui.title("Crosshair Pro")
-ui.geometry("320x550")
+ui.geometry("320x560")
 ui.configure(bg="#0f0f0f")
 ui.attributes("-topmost", True)
 
-def slider(text, var, f, t):
-    tk.Label(ui, text=text, bg="#0f0f0f", fg="white").pack()
+def slider(name, var, a, b):
+    tk.Label(ui, text=name, bg="#0f0f0f", fg="white").pack()
     tk.Scale(
-        ui, from_=f, to=t, orient="horizontal",
+        ui, from_=a, to=b, orient="horizontal",
         variable=var, bg="#0f0f0f",
         fg="white", troughcolor="#222"
     ).pack(fill="x")
@@ -139,17 +200,17 @@ def toggle_recoil():
     recoil_enabled = not recoil_enabled
     if not recoil_enabled:
         recoil_offset = 0
-    update_recoil_button()
-
-def update_recoil_button():
-    recoil_button.config(
-        text="Disable Recoil Compensation" if recoil_enabled
-        else "Enable Recoil Compensation"
+    recoil_btn.config(
+        text="Disable Recoil Compensation"
+        if recoil_enabled else "Enable Recoil Compensation"
     )
 
-recoil_button = tk.Button(ui, bg="#222", fg="white", command=toggle_recoil)
-recoil_button.pack(fill="x")
-update_recoil_button()
+recoil_btn = tk.Button(ui, bg="#222", fg="white", command=toggle_recoil)
+recoil_btn.pack(fill="x")
+recoil_btn.config(
+    text="Disable Recoil Compensation"
+    if recoil_enabled else "Enable Recoil Compensation"
+)
 
 slider("Recoil Strength", recoil_strength, 1, 10)
 
@@ -158,6 +219,7 @@ def reset_all():
     global recoil_enabled, recoil_offset
     recoil_enabled = False
     recoil_offset = 0
+
     size.set(DEFAULTS["size"])
     thickness.set(DEFAULTS["thickness"])
     gap.set(DEFAULTS["gap"])
@@ -166,7 +228,8 @@ def reset_all():
     b.set(DEFAULTS["b"])
     mode.set(DEFAULTS["mode"])
     recoil_strength.set(DEFAULTS["recoil_strength"])
-    update_recoil_button()
+
+    recoil_btn.config(text="Enable Recoil Compensation")
 
 tk.Button(ui, text="Save Settings", command=save_settings).pack(fill="x")
 tk.Button(ui, text="Reset All", command=reset_all).pack(fill="x")
