@@ -1,0 +1,39 @@
+name: Build Portable EXE
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Take files
+      uses: actions/checkout@v4
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install tools
+      run: |
+        pip install pyinstaller pywin32 keyboard pystray pillow psutil
+
+    - name: Make EXE
+      run: |
+        pyinstaller --onefile --noconsole --name CrosshairPro crosshair_pro.py
+
+    - name: Make ZIP
+      run: |
+        mkdir CrosshairPro_Portable
+        copy dist\CrosshairPro.exe CrosshairPro_Portable\
+        copy profiles.json CrosshairPro_Portable\
+        powershell Compress-Archive CrosshairPro_Portable CrosshairPro_Portable.zip
+
+    - name: Save ZIP
+      uses: actions/upload-artifact@v4
+      with:
+        name: CrosshairPro_Portable
+        path: CrosshairPro_Portable.zip
