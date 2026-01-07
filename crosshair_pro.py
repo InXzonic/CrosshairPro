@@ -134,7 +134,7 @@ ui = tk.Toplevel()
 ui.title("Crosshair Pro")
 
 try:
-    ui.iconbitmap("crosshair.ico")
+    ui.iconbitmap("icon.ico")
 except:
     pass
 ui.geometry("320x560")
