@@ -24,11 +24,15 @@ DEFAULTS = {
 
 # ================= LOAD / SAVE =================
 def load_settings():
+    data = DEFAULTS.copy()
     try:
         with open(PROFILE_FILE, "r") as f:
-            return json.load(f)
+            saved = json.load(f)
+            if isinstance(saved, dict):
+                data.update(saved)
     except:
-        return DEFAULTS.copy()
+        pass
+    return data
 
 def save_settings():
     with open(PROFILE_FILE, "w") as f:
@@ -47,7 +51,7 @@ def save_settings():
 settings = load_settings()
 
 # ================= STATE =================
-recoil_enabled = settings.get("recoil_enabled", False)
+recoil_enabled = settings["recoil_enabled"]
 recoil_offset = 0
 
 # ================= OVERLAY =================
@@ -99,62 +103,17 @@ def draw():
     rem = thick - half
 
     if mode.get() == "cross":
-        # LEFT
-        canvas.create_rectangle(
-            cx - gap_ - arm,
-            cy - half,
-            cx - gap_,
-            cy + rem,
-            fill=color,
-            outline=""
-        )
-
-        # RIGHT
-        canvas.create_rectangle(
-            cx + gap_,
-            cy - half,
-            cx + gap_ + arm,
-            cy + rem,
-            fill=color,
-            outline=""
-        )
-
-        # TOP
-        canvas.create_rectangle(
-            cx - half,
-            cy - gap_ - arm,
-            cx + rem,
-            cy - gap_,
-            fill=color,
-            outline=""
-        )
-
-        # BOTTOM
-        canvas.create_rectangle(
-            cx - half,
-            cy + gap_,
-            cx + rem,
-            cy + gap_ + arm,
-            fill=color,
-            outline=""
-        )
+        canvas.create_rectangle(cx - gap_ - arm, cy - half, cx - gap_, cy + rem, fill=color, outline="")
+        canvas.create_rectangle(cx + gap_, cy - half, cx + gap_ + arm, cy + rem, fill=color, outline="")
+        canvas.create_rectangle(cx - half, cy - gap_ - arm, cx + rem, cy - gap_, fill=color, outline="")
+        canvas.create_rectangle(cx - half, cy + gap_, cx + rem, cy + gap_ + arm, fill=color, outline="")
 
     elif mode.get() == "dot":
         d = max(2, thick)
-        canvas.create_oval(
-            cx - d, cy - d,
-            cx + d, cy + d,
-            fill=color,
-            outline=""
-        )
+        canvas.create_oval(cx - d, cy - d, cx + d, cy + d, fill=color, outline="")
 
     elif mode.get() == "circle":
-        canvas.create_oval(
-            cx - arm, cy - arm,
-            cx + arm, cy + arm,
-            outline=color,
-            width=thick
-        )
+        canvas.create_oval(cx - arm, cy - arm, cx + arm, cy + arm, outline=color, width=thick)
 
     overlay.after(16, draw)
 
@@ -179,11 +138,9 @@ ui.attributes("-topmost", True)
 
 def slider(name, var, a, b):
     tk.Label(ui, text=name, bg="#0f0f0f", fg="white").pack()
-    tk.Scale(
-        ui, from_=a, to=b, orient="horizontal",
-        variable=var, bg="#0f0f0f",
-        fg="white", troughcolor="#222"
-    ).pack(fill="x")
+    tk.Scale(ui, from_=a, to=b, orient="horizontal",
+             variable=var, bg="#0f0f0f",
+             fg="white", troughcolor="#222").pack(fill="x")
 
 slider("Size", size, 3, 50)
 slider("Thickness", thickness, 1, 10)
@@ -201,15 +158,13 @@ def toggle_recoil():
     if not recoil_enabled:
         recoil_offset = 0
     recoil_btn.config(
-        text="Disable Recoil Compensation"
-        if recoil_enabled else "Enable Recoil Compensation"
+        text="Disable Recoil Compensation" if recoil_enabled else "Enable Recoil Compensation"
     )
 
 recoil_btn = tk.Button(ui, bg="#222", fg="white", command=toggle_recoil)
 recoil_btn.pack(fill="x")
 recoil_btn.config(
-    text="Disable Recoil Compensation"
-    if recoil_enabled else "Enable Recoil Compensation"
+    text="Disable Recoil Compensation" if recoil_enabled else "Enable Recoil Compensation"
 )
 
 slider("Recoil Strength", recoil_strength, 1, 10)
