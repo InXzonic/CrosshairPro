@@ -132,6 +132,11 @@ threading.Thread(target=recoil_loop, daemon=True).start()
 # ================= UI =================
 ui = tk.Toplevel()
 ui.title("Crosshair Pro")
+
+try:
+    ui.iconbitmap("crosshair.ico")
+except:
+    pass
 ui.geometry("320x560")
 ui.configure(bg="#0f0f0f")
 ui.attributes("-topmost", True)
