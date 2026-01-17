@@ -7,12 +7,19 @@ import win32api
 
 SETTINGS_FILE = "settings.json"
 
+BG = "#0b0e14"
+BOX = "#141823"
+TEXT = "#dcdcdc"
+ACCENT = "#00bcd4"
+BORDER = "#2a2f3a"
+
 
 class CrosshairApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.withdraw()
 
+        # Crosshair overlay
         self.crosshair = tk.Toplevel()
         self.crosshair.overrideredirect(True)
         self.crosshair.attributes("-topmost", True)
@@ -24,14 +31,15 @@ class CrosshairApp:
             width=300,
             height=300,
             bg="magenta",
-            highlightthickness=0,
+            highlightthickness=0
         )
         self.canvas.pack()
 
         self.center_x = 150
-        self.center_y = 150
+        self.base_center_y = 150
+        self.recoil_offset = 0
 
-        # Settings variables
+        # Variables
         self.size = tk.IntVar(value=20)
         self.thickness = tk.IntVar(value=2)
         self.gap = tk.IntVar(value=6)
@@ -40,18 +48,15 @@ class CrosshairApp:
         self.green = tk.IntVar(value=255)
         self.blue = tk.IntVar(value=255)
 
-        self.recoil_enabled = False
         self.recoil_strength = tk.IntVar(value=2)
-
+        self.recoil_enabled = False
         self.running = True
 
         self.load_settings()
         self.create_ui()
         self.update_crosshair()
 
-        self.recoil_thread = threading.Thread(target=self.recoil_loop, daemon=True)
-        self.recoil_thread.start()
-
+        threading.Thread(target=self.recoil_loop, daemon=True).start()
         self.root.mainloop()
 
     # ---------------- UI ----------------
@@ -59,6 +64,8 @@ class CrosshairApp:
     def create_ui(self):
         self.ui = tk.Toplevel()
         self.ui.title("Crosshair Pro")
+        self.ui.configure(bg=BG)
+        self.ui.resizable(False, False)
         self.ui.protocol("WM_DELETE_WINDOW", self.exit_app)
 
         try:
@@ -66,43 +73,88 @@ class CrosshairApp:
         except:
             pass
 
-        self.slider(self.ui, "Size", self.size, 5, 60)
-        self.slider(self.ui, "Thickness", self.thickness, 1, 10)
-        self.slider(self.ui, "Center Gap", self.gap, 0, 30)
+        def box(title):
+            outer = tk.Frame(
+                self.ui, bg=BORDER, padx=1, pady=1
+            )
+            inner = tk.Frame(
+                outer, bg=BOX, padx=10, pady=8
+            )
+            outer.pack(fill="x", padx=10, pady=6)
+            inner.pack(fill="x")
 
-        tk.Label(self.ui, text="Color (RGB)").pack()
-        self.slider(self.ui, "Red", self.red, 0, 255)
-        self.slider(self.ui, "Green", self.green, 0, 255)
-        self.slider(self.ui, "Blue", self.blue, 0, 255)
+            tk.Label(
+                inner, text=title,
+                fg=ACCENT, bg=BOX,
+                font=("Segoe UI", 9, "bold")
+            ).pack(anchor="w", pady=(0, 6))
 
-        tk.Label(self.ui, text="Recoil Strength").pack()
-        tk.Scale(
-            self.ui,
-            from_=1,
-            to=10,
-            orient="horizontal",
-            variable=self.recoil_strength,
-        ).pack(fill="x")
+            return inner
 
-        self.recoil_button = tk.Button(
-            self.ui,
-            text="Enable Recoil Compensation",
-            command=self.toggle_recoil,
+        def slider(parent, text, var, a, b):
+            tk.Label(parent, text=text, fg=TEXT, bg=BOX).pack(anchor="w")
+            tk.Scale(
+                parent,
+                from_=a, to=b,
+                orient="horizontal",
+                variable=var,
+                bg=BOX,
+                fg=TEXT,
+                troughcolor=BORDER,
+                highlightthickness=0,
+                length=220
+            ).pack(fill="x")
+
+        # -------- Boxes --------
+
+        b1 = box("CROSSHAIR")
+        slider(b1, "Size", self.size, 5, 60)
+        slider(b1, "Thickness", self.thickness, 1, 10)
+        slider(b1, "Center Gap", self.gap, 0, 30)
+
+        b2 = box("COLOR (RGB)")
+        slider(b2, "Red", self.red, 0, 255)
+        slider(b2, "Green", self.green, 0, 255)
+        slider(b2, "Blue", self.blue, 0, 255)
+
+        b3 = box("RECOIL")
+        slider(b3, "Strength", self.recoil_strength, 1, 10)
+
+        self.recoil_btn = tk.Button(
+            b3,
+            text="ENABLE RECOIL",
+            bg=BOX,
+            fg=ACCENT,
+            activebackground=ACCENT,
+            activeforeground="#000",
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground=BORDER,
+            command=self.toggle_recoil
         )
-        self.recoil_button.pack(pady=5)
+        self.recoil_btn.pack(fill="x", pady=6)
 
-        tk.Button(self.ui, text="Save Settings", command=self.save_settings).pack(fill="x")
-        tk.Button(self.ui, text="Reset All", command=self.reset_settings).pack(fill="x")
+        b4 = box("SETTINGS")
+        tk.Button(
+            b4,
+            text="SAVE SETTINGS",
+            bg=BOX,
+            fg=TEXT,
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground=BORDER,
+            command=self.save_settings
+        ).pack(fill="x", pady=3)
 
-    def slider(self, parent, text, var, minv, maxv):
-        tk.Label(parent, text=text).pack()
-        tk.Scale(
-            parent,
-            from_=minv,
-            to=maxv,
-            orient="horizontal",
-            variable=var,
-            command=lambda e: self.update_crosshair(),
+        tk.Button(
+            b4,
+            text="RESET ALL",
+            bg=BOX,
+            fg="#ff6b6b",
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground=BORDER,
+            command=self.reset_settings
         ).pack(fill="x")
 
     # ---------------- Crosshair ----------------
@@ -110,56 +162,25 @@ class CrosshairApp:
     def update_crosshair(self):
         self.canvas.delete("all")
 
+        cx = self.center_x
+        cy = self.base_center_y + int(self.recoil_offset)
+
         size = self.size.get()
         gap = self.gap.get()
         thick = self.thickness.get()
-
         color = f"#{self.red.get():02x}{self.green.get():02x}{self.blue.get():02x}"
 
-        cx = self.center_x
-        cy = self.center_y
+        self.canvas.create_line(cx-gap-size, cy, cx-gap, cy, fill=color, width=thick)
+        self.canvas.create_line(cx+gap, cy, cx+gap+size, cy, fill=color, width=thick)
+        self.canvas.create_line(cx, cy-gap-size, cx, cy-gap, fill=color, width=thick)
+        self.canvas.create_line(cx, cy+gap, cx, cy+gap+size, fill=color, width=thick)
 
-        # Left
-        self.canvas.create_line(
-            cx - gap - size,
-            cy,
-            cx - gap,
-            cy,
-            fill=color,
-            width=thick,
+        self.crosshair.geometry(
+            "+{}+{}".format(
+                win32api.GetSystemMetrics(0)//2 - 150,
+                win32api.GetSystemMetrics(1)//2 - 150
+            )
         )
-        # Right
-        self.canvas.create_line(
-            cx + gap,
-            cy,
-            cx + gap + size,
-            cy,
-            fill=color,
-            width=thick,
-        )
-        # Top
-        self.canvas.create_line(
-            cx,
-            cy - gap - size,
-            cx,
-            cy - gap,
-            fill=color,
-            width=thick,
-        )
-        # Bottom
-        self.canvas.create_line(
-            cx,
-            cy + gap,
-            cx,
-            cy + gap + size,
-            fill=color,
-            width=thick,
-        )
-
-        self.crosshair.geometry("+{}+{}".format(
-            win32api.GetSystemMetrics(0)//2 - 150,
-            win32api.GetSystemMetrics(1)//2 - 150,
-        ))
 
         self.root.after(10, self.update_crosshair)
 
@@ -167,53 +188,49 @@ class CrosshairApp:
 
     def toggle_recoil(self):
         self.recoil_enabled = not self.recoil_enabled
-        if self.recoil_enabled:
-            self.recoil_button.config(text="Disable Recoil Compensation")
-        else:
-            self.recoil_button.config(text="Enable Recoil Compensation")
+        self.recoil_btn.config(
+            text="DISABLE RECOIL" if self.recoil_enabled else "ENABLE RECOIL",
+            bg=ACCENT if self.recoil_enabled else BOX,
+            fg="#000" if self.recoil_enabled else ACCENT
+        )
 
     def recoil_loop(self):
         while self.running:
             if self.recoil_enabled and win32api.GetAsyncKeyState(0x01):
-                win32api.mouse_event(
-                    0x0001,
-                    0,
-                    self.recoil_strength.get(),
-                    0,
-                    0,
-                )
+                self.recoil_offset += self.recoil_strength.get() * 0.2
+            else:
+                self.recoil_offset *= 0.85
             time.sleep(0.01)
 
     # ---------------- Settings ----------------
 
     def save_settings(self):
-        data = {
-            "size": self.size.get(),
-            "thickness": self.thickness.get(),
-            "gap": self.gap.get(),
-            "red": self.red.get(),
-            "green": self.green.get(),
-            "blue": self.blue.get(),
-            "recoil_strength": self.recoil_strength.get(),
-            "recoil_enabled": self.recoil_enabled,
-        }
         with open(SETTINGS_FILE, "w") as f:
-            json.dump(data, f)
+            json.dump({
+                "size": self.size.get(),
+                "thickness": self.thickness.get(),
+                "gap": self.gap.get(),
+                "red": self.red.get(),
+                "green": self.green.get(),
+                "blue": self.blue.get(),
+                "recoil_strength": self.recoil_strength.get(),
+                "recoil_enabled": self.recoil_enabled
+            }, f)
 
     def load_settings(self):
         if not os.path.exists(SETTINGS_FILE):
             return
-        with open(SETTINGS_FILE, "r") as f:
-            data = json.load(f)
+        with open(SETTINGS_FILE) as f:
+            d = json.load(f)
 
-        self.size.set(data.get("size", 20))
-        self.thickness.set(data.get("thickness", 2))
-        self.gap.set(data.get("gap", 6))
-        self.red.set(data.get("red", 255))
-        self.green.set(data.get("green", 255))
-        self.blue.set(data.get("blue", 255))
-        self.recoil_strength.set(data.get("recoil_strength", 2))
-        self.recoil_enabled = data.get("recoil_enabled", False)
+        self.size.set(d.get("size", 20))
+        self.thickness.set(d.get("thickness", 2))
+        self.gap.set(d.get("gap", 6))
+        self.red.set(d.get("red", 255))
+        self.green.set(d.get("green", 255))
+        self.blue.set(d.get("blue", 255))
+        self.recoil_strength.set(d.get("recoil_strength", 2))
+        self.recoil_enabled = d.get("recoil_enabled", False)
 
     def reset_settings(self):
         self.size.set(20)
@@ -224,7 +241,8 @@ class CrosshairApp:
         self.blue.set(255)
         self.recoil_strength.set(2)
         self.recoil_enabled = False
-        self.recoil_button.config(text="Enable Recoil Compensation")
+        self.recoil_offset = 0
+        self.recoil_btn.config(text="ENABLE RECOIL", bg=BOX, fg=ACCENT)
         self.save_settings()
 
     # ---------------- Exit ----------------
