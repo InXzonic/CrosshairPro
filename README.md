@@ -29,14 +29,6 @@ Change Color (RGB sliders)
 
 Supports any color (including pure black)
 
-🔹 Crosshair Modes
-
-Cross
-
-Dot
-
-Circle
-
 🔹 Recoil Compensation
 
 Enable / Disable with a button
