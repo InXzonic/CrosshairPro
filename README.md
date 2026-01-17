@@ -72,7 +72,7 @@ Recoil compensation shifts the crosshair slightly when mouse is clicked
 
 Double-click crosshair_pro.py
 
-Or run the .exe if built
+Or run the .exe
 
 You will see:
 
@@ -93,16 +93,6 @@ Gap → distance from center
 Red / Green / Blue → color
 
 Changes apply instantly.
-
-3️⃣ Change Mode
-
-Use the dropdown:
-
-cross
-
-dot
-
-circle
 
 4️⃣ Recoil Compensation
 
