@@ -1,5 +1,5 @@
 # CrosshairPro
-🎯 Crosshair Pro (Windows)
+Crosshair Pro (Windows)
 
 Download : https://github.com/InXzonic/CrosshairPro/actions/runs/21091672397/artifacts/5163234334
 
@@ -16,8 +16,8 @@ Safe & stable
 
 Built using Python + Tkinter
 
-✨ Features
-🔹 Crosshair Customization
+*Features*
+* Crosshair Customization
 
 Adjust Size
 
@@ -29,7 +29,7 @@ Change Color (RGB sliders)
 
 Supports any color (including pure black)
 
-🔹 Recoil Compensation
+* Recoil Compensation
 
 Enable / Disable with a button
 
@@ -39,7 +39,7 @@ Smooth vertical recoil simulation
 
 Automatically resets when disabled
 
-🔹 Settings Management
+* Settings Management
 
 Save Settings (overwrites previous settings)
 
@@ -47,7 +47,7 @@ Reset All (restores default values)
 
 Only one profile is used (simple & clean)
 
-🔹 UI & Behavior
+* UI & Behavior
 
 UI always stays on top
 
@@ -57,7 +57,7 @@ Closing the UI fully exits the program
 
 No background services left running
 
-🖥️ How It Works
+*How It Works*
 
 A transparent fullscreen overlay is drawn
 
@@ -67,8 +67,8 @@ UI controls update the crosshair instantly
 
 Recoil compensation shifts the crosshair slightly when mouse is clicked
 
-🎮 How to Use (Step by Step)
-1️⃣ Run the Program
+*How to Use (Step by Step)*
+1️. Run the Program
 
 Double-click crosshair_pro.py
 
@@ -80,7 +80,7 @@ A control window (UI)
 
 A crosshair at screen center
 
-2️⃣ Adjust Crosshair
+2️. Adjust Crosshair
 
 Use sliders in the UI:
 
@@ -94,7 +94,7 @@ Red / Green / Blue → color
 
 Changes apply instantly.
 
-4️⃣ Recoil Compensation
+3. Recoil Compensation
 
 Click Enable Recoil Compensation
 
@@ -106,7 +106,7 @@ Adjust Recoil Strength slider
 
 Click Disable Recoil Compensation to turn it off.
 
-5️⃣ Save Settings
+4. Save Settings
 
 Click Save Settings
 
@@ -116,7 +116,7 @@ Next time you open the app, settings are restored
 
 Saving again will overwrite the old settings
 
-6️⃣ Reset All
+5. Reset All
 
 Click Reset All
 
@@ -124,7 +124,7 @@ Everything goes back to default
 
 Recoil compensation is disabled automatically
 
-7️⃣ Exit Program
+6. Exit Program
 
 Close the UI window ❌
 
