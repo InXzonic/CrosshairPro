@@ -1,7 +1,7 @@
 # CrosshairPro
 Crosshair Pro (Windows)
 
-Download : https://github.com/InXzonic/CrosshairPro/actions/runs/21091672397/artifacts/5163234334
+Download : https://github.com/InXzonic/CrosshairPro/releases/download/v1.0.0/CrosshairPro.exe
 
 Crosshair Pro is a lightweight Windows overlay software that displays a customizable crosshair at the center of your screen.
 It is designed for FPS games and works on top of any application.
